@@ -1,0 +1,13 @@
+{% extends 'layout.html' %}
+
+{% block content %}
+    {{ contents['index.md'].html }}
+
+    <h3>Random articles</h3>
+        {% for article in env.helpers.getArticlesList(contents) %}
+        <article class="article into">
+            <a href="{{ article.url }}">{{ article.title }}</a>
+        </article>
+        {% endfor %}
+{% endblock %}
+

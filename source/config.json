@@ -1,0 +1,8 @@
+{
+	"output": "../",
+  	"plugins": [
+    	"wintersmith-pagedownextra",
+    	"wintersmith-nunjucks",
+    	"./plugins/supportCode.js"
+  	]
+}

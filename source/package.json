@@ -1,0 +1,7 @@
+{
+  "dependencies": {
+    "wintersmith-pagedownextra": "git://github.com/torque/wintersmith-pagedownextra",
+    "wintersmith-nunjucks": "^0.5.0",
+    "lodash": "^2.4.1"
+  }
+}

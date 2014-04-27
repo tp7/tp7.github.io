@@ -1,26 +1,36 @@
 <!DOCTYPE html>
 <html>
 <head>
-<meta charset="utf-8">
-<title>Hello</title>
-<link rel="stylesheet" href="https://stackedit.io/res-min/themes/base.css" />
-<style type="text/css">
-body {
-	background-color: #f6f7f9;
-}
-</style>
+    <meta charset="utf-8">
+    <title>tp7's hideout</title>
+    <link rel="stylesheet" href="https://stackedit.io/res-min/themes/base.css">
+     <style type="text/css">
+        body {
+            background-color: #f6f7f9;
+        }
+        footer {
+            text-align: center;
+            color: #8e8e8e;
+        }
+        .container {
+            margin-bottom: 100px;
+        }
+     </style>
 </head>
-<body><div class="container"><h1 id="hello">Hello</h1>
+<body>
+    <div class="container" id="content">
+    
+    <h1>Hello</h1>
 
-<p>I’m Victor Efimov, more commonly known as tp7. I’m currently a code typist in Russian Far East.  <br>
-I usually type server-side ASP.NET MVC apps at work but my free typing activities vary from assembly all way up to JavaScript.  <br>
+<p>I&#8217;m Victor Efimov, more commonly known as tp7. I&#8217;m currently a code typist in Russian Far East. <br>
+I usually type server-side ASP.NET MVC apps at work but my free typing activities vary from assembly all way up to JavaScript. <br>
 My language of preference is C#. I can also use C++ and know a thing or two about Python.</p>
 
-<h3 id="things-ive-done">Things I’ve done</h3>
+<h3>Things I&#8217;ve done</h3>
 
-<p>Are almost always terrible. Here’s some open source projects I’ve worked on.</p>
+<p>Are almost always terrible. Here&#8217;s some open source projects I&#8217;ve worked on.</p>
 
-<h4 id="avisynth">AviSynth</h4>
+<h4>AviSynth</h4>
 
 <ol>
 <li><a href="https://github.com/AviSynth/AviSynthPlus">Avisynth+</a> - I contributed quite a lot of code to avs+ core filters.</li>
@@ -38,33 +48,57 @@ My language of preference is C#. I can also use C++ and know a thing or two abou
 <li><a href="https://github.com/tp7/CLExpr">CLExpr</a> - OpenCl plugin for runtime calculation of expressions on 8 and 16-bit depths clips. Makes mt_lutxy and mt_lutxyz possible on 16-bit.</li>
 </ol>
 
-<h4 id="other">Other</h4>
+<h4>Other</h4>
 
 <ol>
 <li><a href="https://github.com/tp7/WOptiPNG">WOptiPNG</a> - simple modern <a href="http://optipng.sourceforge.net/">OptiPNG</a> GUI</li>
 </ol>
 
-<h3 id="contacts">Contacts</h3>
+<h3>Contacts</h3>
 
-<p>Feel free to follow me on <a href="https://github.com/tp7">GitHub</a> or <a href="https://twitter.com/tp7ptr">twitter</a>. You can also drop an email to <a data-email="%6f%70%65%6e%40%74%70%37%2e%70%77" id="email-link" href="#">somewhere</a>. </p></div>
+<p>Feel free to follow me on <a href="https://github.com/tp7">GitHub</a> or <a href="https://twitter.com/tp7ptr">twitter</a>. You can also drop an email to <a data-email="%6f%70%65%6e%40%74%70%37%2e%70%77" id="email-link" href="/#">somewhere</a>. </p>
+
+    <h3>Random articles</h3>
+        
+        <article class="article into">
+            <a href="/articles/masktools/">Masktools</a>
+        </article>
+        
+        <article class="article into">
+            <a href="/articles/scenefiltering/">Efficient scenefiltering with AviSynth</a>
+        </article>
+        
+
+    </div>
+
+
+    <footer>
+        
+        <div class="content-wrap">
+            <p>&copy; 2014 Victor Efimov &mdash; 
+            powered by <a href="https://github.com/jnordberg/wintersmith">Wintersmith</a> 
+            and <a href="https://stackedit.io/">stackedit.io</a></p>
+        </div>
+        
+    </footer>
 </body>
+
 <script type="text/javascript">
-  var _gaq = _gaq || [];
-  _gaq.push(['_setAccount', 'UA-50094134-1']);
-  _gaq.push(['_trackPageview']);
+var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-50094134-1']);
+    _gaq.push(['_trackPageview']);
 
-  (function() {
-    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
-    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
-    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
-  })();
+    (function() {
+        var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+        ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
 
-  (function() {
-  	var a = document.getElementById('email-link');
-  	var email = decodeURIComponent(a.getAttribute("data-email"));
-  	a.href = "mailto:" + email;
-  	a.innerText = email;
-  })();
+    (function() {
+        var a = document.getElementById('email-link');
+        var email = decodeURIComponent(a.getAttribute("data-email"));
+        a.href = "mailto:" + email;
+        a.innerText = email;
+    })();
 </script>
-
 </html>

@@ -1,0 +1,14 @@
+{% extends 'layout.html' %}
+
+{% block title %}{{page.title}} - {% endblock %}
+
+{% block content %}
+    {{ page.html }}
+{% endblock %}
+
+{% block footer %}
+<div class="nav">
+	<a href="{{contents.index.url}}">Back to main page</a>
+</div>
+{{ super() }}
+{% endblock %}
