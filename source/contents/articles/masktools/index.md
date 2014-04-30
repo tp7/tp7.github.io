@@ -1,9 +1,7 @@
 ---
 template: article.html
-title: Masktools
+title: Masktools 2
 ---
-
-# Masktools 2
 
 #### What's a lut?
 
