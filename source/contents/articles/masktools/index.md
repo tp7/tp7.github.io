@@ -1,6 +1,7 @@
 ---
 template: article.html
 title: Masktools 2
+date: 2013-09-13
 ---
 
 #### What's a lut?

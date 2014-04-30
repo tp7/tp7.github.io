@@ -1,6 +1,7 @@
 ---
 template: article.html
 title: Efficient scenefiltering with AviSynth
+date: 2013-09-12
 ---
 
 Scenefiltering is a cancer of encoding. It’s a drug. It’s surprisingly easy to start doing it and almost impossible to quit. You don’t even notice how it consumes all of you. You think you’ll just filter one or two scenes differently and in no time you’re enhancing every frame using Adobe® Photoshop® software. Don’t even start. It’s not worth it. No one will ever notice your effort.
