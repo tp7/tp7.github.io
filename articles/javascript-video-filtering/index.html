@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Real-time video filtering in JavaScript - tp7's hideout</title>
+    <link rel="stylesheet" href="https://stackedit.io/res-min/themes/base.css">
+     <style type="text/css">
+        body {
+            background-color: #f6f7f9;
+        }
+        footer {
+            text-align: center;
+            color: #8e8e8e;
+        }
+        .container {
+            margin-bottom: 100px;
+        }
+     </style>
+</head>
+<body>
+    <div class="container" id="content">
+    
+<style type="text/css">
+.post-date {
+	margin-top: -40px;
+	color: rgb(203, 203, 203);
+}
+</style>
+
+	<h1>Real-time video filtering in JavaScript</h1>
+	<div class="post-date">1.05.2014</div>
+	
+    <p><base target="_blank"></p>
+
+<p>Video processing is moving to runtime - with powerful PCs we have today, it&#8217;s entirely possible and in fact easy to apply some (fairly complex) filtering on playback, thus avoiding the need for the time-consuming encoding stage <a href="http://avisynth.nl/index.php/Main_Page">with ancient and overcomplicated tools</a> <em>plus</em> getting the ability to modify the video in the exact way the end user wants to see it. </p>
+
+<p>While we have this area covered quite well on desktop with tools like <a href="http://sourceforge.net/projects/ffdshow-tryout/">ffdshow raw video filter</a> and <a href="http://forum.doom9.org/showthread.php?t=146228">madVR</a>, we don&#8217;t have anything like this in the browser. You either have to enjoy the full ugliness of some YouTube videos or use external apps such as <a href="http://sourceforge.net/projects/mpcbe/">MPC-BE</a> to rip the video, which is far from being convenient. It would be nice to avoid all the hassle, press a button and enjoy the filtered video right where it&#8217;s supposed to be.</p>
+
+<h3>The problem</h3>
+
+<p>I&#8217;ve asked around and apparently I&#8217;m not the only one who thought about it, which means this time I might actually get more than one user. So I started studying the field and it appears that the most reasonable way of implementing this is a browser extension, written entirely in JavaScript. Most of the codebase could be shared between different extension versions for different browser, plus you could easily get into extension stores.</p>
+
+<p>The basic workflow of this extension is simple: find a <em>video</em> tag on the page, get frames from it and display them on a canvas placed on top of the video. There are questions about CORS and some sites still using Flash but those are not relevant for most cases. </p>
+
+<p>The real issue with this approach is the implementation language - JavaScript. The single reasonable alternative is <a href="https://developer.chrome.com/native-client">Google Chrome Native Client</a> which (surprisingly) works only in Chrome and Mozilla doesn&#8217;t appear to have any plans of supporting it in the future. But this shouldn&#8217;t be a problem, right? JavaScript is getting faster these days and a lot of programmers on the internet argue that it&#8217;s the only language you ever need to write almost any kind of software. There are some great tools like sm.js, SIMD.js, WebGL and WebCL which could make your extension run only a little bit slower than native code.</p>
+
+<p>Well, not exactly. </p>
+
+<h3>The pure JavaScript</h3>
+
+<p>Pure JS filtering works in the following way:</p>
+
+<ol>
+<li>Get the video element and hide it.</li>
+<li>Add a canvas to the page, placed exactly above the video element.</li>
+<li>Using a timer, on every tick: <br>
+<ol><li>Draw the video frame on the canvas using <code>context.drawImage(video, 0, 0)</code></li>
+<li>Get frame buffer from the canvas, using <code>context.getImageData(0, 0, width, height)</code></li>
+<li>Process the buffer with whatever filters you want, it&#8217;s just raw ARGB bytes</li>
+<li>Put the image data back (or to another canvas), using <code>context.putImageData(imageData, 0, 0)</code></li></ol></li>
+</ol>
+
+<p>This approach works and it allows you to do real filtering in JavaScript with just minimal amount of very-close-to-regular-C code. Here&#8217;s the basic implementation of <em>invert</em> filter:</p>
+
+<pre class="language-javascript hljs"><code class="language-javascript">outputContext.drawImage(video, <span class="hljs-number">0</span>, <span class="hljs-number">0</span>);
+<span class="hljs-keyword">var</span> imageData = outputContext.getImageData(<span class="hljs-number">0</span>, <span class="hljs-number">0</span>, width, height);
+<span class="hljs-keyword">var</span> source = imageData.data;
+<span class="hljs-keyword">var</span> length = source.length;
+<span class="hljs-keyword">for</span> (<span class="hljs-keyword">var</span> i = <span class="hljs-number">0</span>; i &lt; length; i += <span class="hljs-number">4</span>) {
+    source[i  ] = <span class="hljs-number">255</span> - source[i];
+    source[i+<span class="hljs-number">1</span>] = <span class="hljs-number">255</span> - source[i+<span class="hljs-number">1</span>];
+    source[i+<span class="hljs-number">2</span>] = <span class="hljs-number">255</span> - source[i+<span class="hljs-number">2</span>];
+    <span class="hljs-comment">// ignore the alpha</span>
+}
+outputContext.putImageData(imageData, <span class="hljs-number">0</span>, <span class="hljs-number">0</span>);</code></pre>
+
+<p>Unfortunately, it doesn&#8217;t work on any reasonably high resolution. While <code>drawImage</code> itself is <a href="/articles/javascript-video-filtering/pure.html?filter=none">very quick</a> even on 1080p, simply adding <code>getImageData</code> and <code>putImageData</code> calls to it <a href="/articles/javascript-video-filtering/pure.html?filter=copy">brings execution time to 20-30ms here</a>. Adding the included <a href="/articles/javascript-video-filtering/pure.html?filter=invert"><em>invert</em></a> code makes it 35-40 (yes, I know you can optimize it), which is the maximum limit for PAL video (25fps, 40ms per frame). And I&#8217;m using a 4770k which is one of the most powerful home-level CPUs right now. This means you cannot run any reasonably complex video filter on a one-two years old CPU <strong>no matter how fast your javascript code is</strong>. Depressing, isn&#8217;t it?</p>
+
+<p>But JS code is very slow on its own. While it might work for simple point operations like invert or a lut, but it fails short on anything more complex. <a href="/articles/javascript-video-filtering/pure.html?filter=noise">Simple noise filter</a> implementation that adds random value to every pixel runs at 55ms. <a href="/articles/javascript-video-filtering/pure.html?filter=blur">3x3 blur kernel</a>, implemented with in the following function (ignoring border conditions), runs at about 400ms, 2.5 frames per second!</p>
+
+<pre class="language-javascript hljs"><code class="language-javascript"><span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">blur</span><span class="hljs-params">(source, width, height)</span> {</span>
+    <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">blur_core</span><span class="hljs-params">(ptr, offset, stride)</span> {</span>
+        <span class="hljs-keyword">return</span> (ptr[offset - stride - <span class="hljs-number">4</span>] +
+                ptr[offset - stride] +
+                ptr[offset - stride + <span class="hljs-number">4</span>] +
+                ptr[offset - <span class="hljs-number">4</span>] +
+                ptr[offset] +
+                ptr[offset + <span class="hljs-number">4</span>] +
+                ptr[offset + stride - <span class="hljs-number">4</span>] +
+                ptr[offset + stride] +
+                ptr[offset + stride + <span class="hljs-number">4</span>]
+                ) / <span class="hljs-number">9</span>;
+    }
+
+    <span class="hljs-keyword">var</span> stride = width * <span class="hljs-number">4</span>;
+    <span class="hljs-keyword">for</span> (<span class="hljs-keyword">var</span> y = <span class="hljs-number">1</span>; y &lt; (height - <span class="hljs-number">1</span>); ++y) {
+        <span class="hljs-keyword">var</span> offset = y * stride;
+        <span class="hljs-keyword">for</span> (<span class="hljs-keyword">var</span> x = <span class="hljs-number">1</span>; x &lt; stride - <span class="hljs-number">4</span>; x += <span class="hljs-number">4</span>) {
+            source[offset] = blur_core(source, offset, stride);
+            source[offset + <span class="hljs-number">1</span>] = blur_core(source, offset + <span class="hljs-number">1</span>, stride);
+            source[offset + <span class="hljs-number">2</span>] = blur_core(source, offset + <span class="hljs-number">2</span>, stride);
+            offset += <span class="hljs-number">4</span>;
+        }
+    }
+}</code></pre>
+
+<p>Firefox manages to do it even &#8220;better&#8221; at 800ms/pass. Clearly, pure JavaScript is not the right way to implement any video filtering right now.</p>
+
+<h3>asm.js</h3>
+
+<p><a href="http://asmjs.org/">Asm.js</a> is Mozilla&#8217;s way to optimizing JavaScript execution. The code it generates will still run in Chrome but you shouldn&#8217;t expect any significant performance difference there as V8 <a href="https://code.google.com/p/v8/issues/detail?id=2599">doesn&#8217;t seem to support it yet</a>. Firefox on the other hand should get some significant performance improvements.</p>
+
+<p>Unforuntately I couldn&#8217;t come up with any reasonable way to optimize only a few functions using asm.js. <a href="https://github.com/kripken/emscripten">Emscripten</a> generates some 4.5k lines of code file when fed with a trivial 2 lines function, with no apparent way of extracting the required code from it. And you really don&#8217;t want to <a href="https://github.com/NightMigera/piHex/blob/master/pi.js">write asm.js manually</a> unless you hate yourself (<a href="http://habrahabr.ru/post/193642/">very useful article on hurting yourself with asm.js</a>, in russian). Moreover, no matter how fast asm.js is, it won&#8217;t fix the issue with 30ms lag of <code>getImageData-&gt;putImageData</code> chain.</p>
+
+<h3>SIMD.js</h3>
+
+<p><a href="https://01.org/blogs/tlcounts/2014/bringing-simd-javascript">SIMD.js</a> is an even newer technology which is currently kinda supported only in <a href="https://nightly.mozilla.org/">Firefox Nightly</a> but which has all chances to <a href="http://www.phoronix.com/scan.php?page=news_item&amp;px=MTY0ODE">get support everywhere very soon</a>. Unfortunately, right now the API <a href="http://www.2ality.com/2013/12/simd-js.html">supports only two data types</a>, float32x4 and uint32x4, meaning it&#8217;s basically useless for any real video filtering. Moreover, Int32x4Array type doesn&#8217;t seem to be implemented in Nightly yet, which makes writing and reading values from source buffer extremely slow (when implemented in <a href="https://github.com/johnmccutchan/ecmascript_simd/blob/master/src/int32x4array.js#L107">this</a> way). Still, here&#8217;s an example code for the usual invert filter.</p>
+
+<pre class="language-javascript hljs"><code class="language-javascript"><span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">invert_frame_simd</span><span class="hljs-params">(source)</span> {</span>
+    <span class="hljs-keyword">var</span> fff = SIMD.int32x4.splat(<span class="hljs-number">0x00FFFFFF</span>);
+    <span class="hljs-keyword">var</span> length = source.length / <span class="hljs-number">4</span>;
+    <span class="hljs-keyword">var</span> int32 = <span class="hljs-keyword">new</span> <span class="hljs-built_in">Uint32Array</span>(source.buffer);
+    <span class="hljs-keyword">for</span> (<span class="hljs-keyword">var</span> i = <span class="hljs-number">0</span>; i &lt; length; i += <span class="hljs-number">4</span>) {
+        <span class="hljs-keyword">var</span> src = SIMD.int32x4(int32[i], int32[i+<span class="hljs-number">1</span>], int32[i+<span class="hljs-number">2</span>], int32[i+<span class="hljs-number">3</span>]);
+        <span class="hljs-keyword">var</span> dst = SIMD.int32x4.xor(src, fff);
+        int32[i+<span class="hljs-number">0</span>] = dst.x;
+        int32[i+<span class="hljs-number">1</span>] = dst.y;
+        int32[i+<span class="hljs-number">2</span>] = dst.z;
+        int32[i+<span class="hljs-number">3</span>] = dst.w;
+    }
+}</code></pre>
+
+<p>Unfortunately it runs a lot slower than pure JS right now (try it <a href="/articles/javascript-video-filtering/pure.html?filter=simd">here</a>), at about 1600ms/pass. Looks like we&#8217;ll have to wait for some time before it&#8217;d be possible to do anything of value with this technology. It is also not clear if it&#8217;ll be possible to use 256-bit registers (int32x4 is SSE2) and newer instruction sets like the very useful SSSE3. Plus you&#8217;ll still have to deal with the getImageData lag. But you can already get some <a href="/articles/javascript-video-filtering/pure.html?filter=buggySimd">nice SIMD bugs</a> which you know and love!</p>
+
+<h3>WebGL</h3>
+
+<p>A completely different way of doing things is <a href="https://en.wikipedia.org/wiki/WebGL">WebGL</a>. WebGL is basically a JavaScript interface for native OpenGL implementation, which allows you to run some fancy code on GPU. It&#8217;s usually used for graphic programming in games and such, but you can also do some <a href="http://www.html5rocks.com/en/tutorials/webgl/webgl_fundamentals/">image</a> and even <a href="http://seriouslyjs.org/">video</a> processing with it. Moreover, you don&#8217;t have to call the usual getImageData routine, which means that it isn&#8217;t limited to the usual 20ms lag. </p>
+
+<p>But the power comes at a price - <strong>WebGL is <em>not</em> designed for video processing and using it this way is a giant pain in the ass</strong>. You need to go through the whole process of defining vertices (which will be always cover the whole frame), defining texture positions (which will always cover the whole frame) and then <a href="https://developer.mozilla.org/en-US/docs/Web/WebGL/Animating_textures_in_WebGL">applying the video as a texture</a>. Thankfully, WebGL is smart enough to get frames from the video automatically. Well, at least in Chrome and Firefox, IE11 is not so happy about it:</p>
+
+<blockquote>
+  <p>WEBGL11072: INVALID_VALUE: texImage2D: This texture source is not supported</p>
+</blockquote>
+
+<p>Moreover, you have to deal with <a href="https://github.com/brianchirls/Seriously.js/blob/0d029c40401f98aea9cd6170bef7866f6c1750ac/effects/seriously.dither.js#L51">somewhat braindamaged GLSL language</a>, which <a href="https://stackoverflow.com/questions/15262729/const-float-array-in-webgl-shader">doesn&#8217;t even support defining constant arrays</a>, so you either have to pass them as uniforms (fancy kinda-global variables), or do it the old way:</p>
+
+<pre><code>float core1[9];
+core1[0] = 1.0;
+core1[1] = 1.0;
+core1[2] = 0.0;
+core1[3] = 1.0;
+core1[4] = 0.0;
+core1[5] = -1.0;
+core1[6] = 0.0;
+core1[7] = -1.0;
+core1[8] = -1.0;</code></pre>
+
+<p>In short, CUDA and OpenCL were implemented <em>not</em> because OpenGL (and DirectX for that matter) is great for generic-purpose programming.</p>
+
+<p>On the bright side, WebGL delivers truly amazing performance for web (which you have no easy way to measure) - it can process <a href="/articles/javascript-video-filtering/webgl.html">masktools prewitt core</a> (four different 3x3 cores) in real time on a 1080p video (and higher resolutions) without any problems. If you hate yourself and are not afraid of the not-so-maintainable codebase, you could definitely do some very fancy things with it. If you hate yourself a little less and you&#8217;re fine with depending on a huge libraries, do take a look at <a href="http://seriouslyjs.org/">seriously.js</a>. If you&#8217;re like me and want to keep your code clean, then you probably want to use WebCL.</p>
+
+<h3>WebCL</h3>
+
+<p>But you can&#8217;t. According to <a href="https://en.wikipedia.org/wiki/WebCL">wikipedia</a>, WebCL 1.0 was finalized on March 19, 2014. This makes it the youngest technology yet, even newer than SIMD.js. And unlike SIMD.js, it <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=664147#c30">won&#8217;t be implemented in Firefox</a> any time soon. I can&#8217;t find the link but remember reading that it won&#8217;t make it to Chrome either, for security reasons and whatnot. We&#8217;re totally out of luck here. </p>
+
+<h3>Conclusion</h3>
+
+<p>Real-time video processing inside your browser is possible. Kinda. </p>
+
+<p>The only way of doing it with reasonable performance is using WebGL, which offers very fast execution at the price of a very ugly codebase. All other ways have to deal with the awful canvas performance and are either too slow or too new and unpolished to be used in real world. </p>
+
+<p>It&#8217;s very unlikely that I&#8217;ll be implementing this extension myseful because I simply don&#8217;t hate myself enough. A single look at the <a href="/articles/javascript-video-filtering/webgl.html">webgl demo</a> source code makes me want to never touch graphics programming again. But who knows what might happen tomorrow.</p>
+
+<h4>Notes</h4>
+
+<ol>
+<li>All demonstrations are based on a looped video which lags horribly on looping in most browsers. This happens because <a href="https://stackoverflow.com/questions/17930964/video-element-with-looping-does-not-loop-videos-seamlessly-in-chrome-or-firefo">browsers suck</a>.</li>
+<li>If you don&#8217;t like looping video, add <code>loop=false</code> query parameter to the demo url.</li>
+<li>Both demonstrations contain full source code right in the html files with no external dependencies, which is probably useful for learning.</li>
+<li>I have no idea what I&#8217;m doing in JavaScript or WebGL.</li>
+</ol>
+
+    </div>
+
+
+    <footer>
+        
+<div class="nav">
+	<a href="/" target="_self">Back to main page</a>
+</div>
+
+        <div class="content-wrap">
+            <p>&copy; 2014 Victor Efimov &mdash; 
+            powered by <a href="https://github.com/jnordberg/wintersmith">Wintersmith</a> 
+            and <a href="https://stackedit.io/">stackedit.io</a></p>
+        </div>
+        
+
+    </footer>
+</body>
+
+<script type="text/javascript">
+var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-50094134-1']);
+    _gaq.push(['_trackPageview']);
+
+    (function() {
+        var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+        ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+
+    (function() {
+        var a = document.getElementById('email-link');
+        var email = decodeURIComponent(a.getAttribute("data-email"));
+        a.href = "mailto:" + email;
+        a.innerText = email;
+    })();
+</script>
+</html>

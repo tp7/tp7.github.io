@@ -1,0 +1,188 @@
+<html>
+<head>
+    <title>JavaScript video filtering demo</title>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+    <script type="text/javascript">
+        "use strict";
+
+        var video;
+        var outputContext;
+        var timeElement;
+
+        //https://stackoverflow.com/questions/901115/how-can-i-get-query-string-values-in-javascript
+        function getParameterByName(name) {
+            name = name.replace(/[\[]/, "\\[").replace(/[\]]/, "\\]");
+            var regex = new RegExp("[\\?&]" + name + "=([^&#]*)"),
+                    results = regex.exec(location.search);
+            return results == null ? "" : decodeURIComponent(results[1].replace(/\+/g, " "));
+        }
+
+        var loopVideo = getParameterByName('loop') != "false";
+        var filterType = getParameterByName('filter');
+
+        function measureTime(action) {
+            var start = new Date().getTime();
+            action();
+            return (new Date().getTime()) - start;
+        }
+
+        var totalTime = 0;
+        var totalRuns = 0;
+
+        function invert_frame(source) {
+            var length = source.length;
+            for (var i = 0; i < length; i += 4) {
+                source[i  ] = 255 - source[i];
+                source[i + 1] = 255 - source[i + 1];
+                source[i + 2] = 255 - source[i + 2];
+                // ignore the alpha
+            }
+        }
+
+        function invert_frame_simd(source) {
+            var fff = SIMD.int32x4.splat(0x00FFFFFF);
+            var length = source.length / 4;
+            var int32 = new Uint32Array(source.buffer);
+            for (var i = 0; i < length; i += 4) {
+                var src = SIMD.int32x4(int32[i], int32[i+1], int32[i+2], int32[i+3]);
+                var dst = SIMD.int32x4.xor(src, fff);
+                int32[i+0] = dst.x;
+                int32[i+1] = dst.y;
+                int32[i+2] = dst.z;
+                int32[i+3] = dst.w;
+            }
+        }
+
+        function invert_frame_simd_buggy(source) {
+            var fff = SIMD.int32x4.splat(0x00FFFFFF);
+            var length = source.length / 4;
+            var int32 = new Uint32Array(source.buffer);
+            for (var i = 0; i < length; i += 4) {
+                var src = SIMD.int32x4(int32[i], int32[i+1], int32[i+2], int32[i+3]);
+                var dst = SIMD.int32x4.xor(src, fff);
+                int32[i+0] = dst.w;
+                int32[i+1] = dst.z;
+                int32[i+2] = dst.y;
+                int32[i+3] = dst.x;
+            }
+        }
+
+        function add_noise(source) {
+            var length = source.length;
+            for (var i = 0; i < length; i += 4) {
+                var random = Math.random() * 10;
+                source[i  ] = source[i] + random;
+                source[i + 1] = source[i + 1] + random;
+                source[i + 2] = source[i + 2] + random;
+                // ignore the alpha
+            }
+        }
+
+        function blur(source, width, height) {
+            function blur_core(ptr, offset, stride) {
+                return (ptr[offset - stride - 4] +
+                        ptr[offset - stride] +
+                        ptr[offset - stride + 4] +
+                        ptr[offset - 4] +
+                        ptr[offset] +
+                        ptr[offset + 4] +
+                        ptr[offset + stride - 4] +
+                        ptr[offset + stride] +
+                        ptr[offset + stride + 4]
+                        ) / 9;
+            }
+
+            var stride = width * 4;
+            for (var y = 1; y < (height - 1); ++y) {
+                var offset = y * stride;
+                for (var x = 1; x < stride - 4; x += 4) {
+                    source[offset] = blur_core(source, offset, stride);
+                    source[offset + 1] = blur_core(source, offset + 1, stride);
+                    source[offset + 2] = blur_core(source, offset + 2, stride);
+                    offset += 4;
+                }
+            }
+        }
+
+        function processFrame() {
+            var width = video.videoWidth;
+            var height = video.videoHeight;
+            totalTime += measureTime(function () {
+                outputContext.drawImage(video, 0, 0);
+                if (filterType == "none") {
+                    return;
+                }
+                var imageData = outputContext.getImageData(0, 0, width, height);
+                if (filterType == "noise") {
+                    add_noise(imageData.data);
+                } else if (filterType == "blur") {
+                    blur(imageData.data, width, height);
+                } else if (filterType == "copy") {
+                    //do nothing
+                } else if (filterType == "simd") {
+                    invert_frame_simd(imageData.data);
+                } else if (filterType == "buggySimd") {
+                    invert_frame_simd_buggy(imageData.data);
+                } else {
+                    invert_frame(imageData.data);
+                }
+
+                outputContext.putImageData(imageData, 0, 0);
+            });
+            totalRuns++;
+            if (totalRuns == 50) {
+                timeSpent.textContent = 'Average time of last 50 iterations: ' + totalTime / totalRuns + 'ms';
+                totalRuns = 0;
+                totalTime = 0;
+            }
+        }
+
+        function timerCallback() {
+            processFrame();
+            if (loopVideo || (video.currentTime < video.duration)) {
+                setTimeout(function () {
+                    timerCallback();
+                }, 0);
+            }
+        }
+
+        function init() {
+            video = document.getElementById('video');
+            timeElement = document.getElementById('timeSpent');
+            if (loopVideo) {
+                video.loop = true;
+            } else {
+                var button = document.getElementById('play-button');
+                button.style.display = 'block';
+                button.addEventListener('click', function () {
+                    video.load();
+                    video.play();
+                });
+            }
+            var outputcanvas = document.getElementById('output');
+            outputContext = outputcanvas.getContext('2d');
+            timerCallback();
+        }
+    </script>
+</head>
+
+<body>
+<video id="video" onloadeddata="init()" autoplay="autoplay" style="display: none" width="1920" height="1080">
+    <source src="touhou.mp4" type="video/mp4"/>
+</video>
+<canvas id="output" width="1920" height="1080" style="border: solid 2px black"></canvas>
+<label id="timeSpent" style="display: block"></label>
+<input type="button" style="display: none" id="play-button" value="Play"/>
+</body>
+<script type="text/javascript">
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-50094134-1']);
+    _gaq.push(['_trackPageview']);
+
+    (function() {
+        var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+        ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+</script>
+</html>
