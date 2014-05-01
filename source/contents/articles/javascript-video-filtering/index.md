@@ -7,7 +7,7 @@ template: article.html
 
 Video processing is moving to runtime - with powerful PCs we have today, it's entirely possible and in fact easy to apply some (fairly complex) filtering on playback, thus avoiding the need for the time-consuming encoding stage [with ancient and overcomplicated tools][1] *plus* getting the ability to modify the video in the exact way the end user wants to see it. 
 
-While we have this area covered quite well on desktop with tools like [ffdshow raw video filter][2] and [madVR][3], we don't have anything like this in the browser. You either have to enjoy the full ugliness of some YouTube videos or use external apps such as [MPC-BE][4] to rip the video, which is far from being convenient. It would be nice to avoid all the hassle, press a button and enjoy the filtered video right where it's supposed to be.
+While we have this area covered quite well on desktop with tools like [ffdshow raw video filter][2] and [madVR][3], we don't have anything like this in the browser. You either have to enjoy the full ugliness of some YouTube videos or use external apps such as [MPC-BE][4] to rip them, which is far from being convenient. It would be nice to avoid all the hassle, press a button and enjoy the filtered video right where it's supposed to be.
 
 ### The problem
 
@@ -15,7 +15,7 @@ I've asked around and apparently I'm not the only one who thought about it, whic
 
 The basic workflow of this extension is simple: find a *video* tag on the page, get frames from it and display them on a canvas placed on top of the video. There are questions about CORS and some sites still using Flash but those are not relevant for most cases. 
 
-The real issue with this approach is the implementation language - JavaScript. The single reasonable alternative is [Google Chrome Native Client][5] which (surprisingly) works only in Chrome and Mozilla doesn't appear to have any plans of supporting it in the future. But this shouldn't be a problem, right? JavaScript is getting faster these days and a lot of programmers on the internet argue that it's the only language you ever need to write almost any kind of software. There are some great tools like asm.js, SIMD.js, WebGL and WebCL which could make your extension run only a little bit slower than native code.
+The real issue with this approach is the implementation language - JavaScript. The single reasonable alternative is [Google Chrome Native Client][5] which (surprisingly) works only in Chrome, while Mozilla doesn't appear to have any plans of supporting it in the future. But this shouldn't be a problem, right? JavaScript is getting faster these days and a lot of programmers on the internet argue that it's the only language you ever need to write almost any kind of software. There are also some great tools like asm.js, SIMD.js, WebGL and WebCL which could make your extension run only a little bit slower than native code.
 
 Well, not exactly. 
 
@@ -47,7 +47,7 @@ outputContext.putImageData(imageData, 0, 0);
 ```
 Unfortunately, it doesn't work on any reasonably high resolution. While `drawImage` itself is [very quick][6] even on 1080p, simply adding `getImageData` and `putImageData` calls to it [brings execution time to 20-30ms here][7]. Adding the included [*invert*][8] code makes it 35-40 (yes, I know you can optimize it), which is the maximum limit for PAL video (25fps, 40ms per frame). And I'm using a 4770k which is one of the most powerful home-level CPUs right now. This means you cannot run any reasonably complex video filter on a one-two years old CPU **no matter how fast your javascript code is**. Depressing, isn't it?
 
-But JS code is very slow on its own. While it might work for simple point operations like invert or a lut, but it fails short on anything more complex. [Simple noise filter][9] implementation that adds random value to every pixel runs at 55ms. [3x3 blur kernel][10], implemented with in the following function (ignoring border conditions), runs at about 400ms, 2.5 frames per second!
+But JS code is very slow on its own. While it might work for simple point operations like invert or a lut, but it fails short on anything more complex. [Simple noise filter][9] implementation that adds random value to every pixel runs at 55ms. [3x3 blur kernel][10], implemented in the following function (ignoring border conditions), runs at about 400ms, 2.5 frames per second!
 ```javascript
 function blur(source, width, height) {
     function blur_core(ptr, offset, stride) {
@@ -79,13 +79,13 @@ Firefox manages to do it even "better" at 800ms/pass. Clearly, pure JavaScript i
 
 ### asm.js
 
-[Asm.js][11] is Mozilla's way to optimizing JavaScript execution. The code it generates will still run in Chrome but you shouldn't expect any significant performance difference there as V8 [doesn't seem to support it yet][12]. Firefox on the other hand should get some significant performance improvements.
+[Asm.js][11] is Mozilla's way to optimizing JavaScript execution. The code it generates will still run in Chrome but you shouldn't expect any significant performance difference there as V8 [doesn't seem to support it yet][12]. Firefox on the other hand should get some nice speedup.
 
 Unforuntately I couldn't come up with any reasonable way to optimize only a few functions using asm.js. [Emscripten][13] generates some 4.5k lines of code file when fed with a trivial 2 lines function, with no apparent way of extracting the required code from it. And you really don't want to [write asm.js manually][14] unless you hate yourself ([very useful article on hurting yourself with asm.js][15], in russian). Moreover, no matter how fast asm.js is, it won't fix the issue with 30ms lag of `getImageData->putImageData` chain.
 
 ### SIMD.js
 
-[SIMD.js][16] is an even newer technology which is currently kinda supported only in [Firefox Nightly][17] but which has all chances to [get support everywhere very soon][18]. Unfortunately, right now the API [supports only two data types][19], float32x4 and uint32x4, meaning it's basically useless for any real video filtering. Moreover, Int32x4Array type doesn't seem to be implemented in Nightly yet, which makes writing and reading values from source buffer extremely slow (when implemented in [this][20] way). Still, here's an example code for the usual invert filter.
+[SIMD.js][16] is an even newer technology which is currently kinda supported only in [Firefox Nightly][17] but which has all chances to [get support everywhere very soon][18]. Unfortunately, right now the API [supports only two data types][19], float32x4 and uint32x4, meaning it's basically useless for any real video filtering. Moreover, Int32x4Array type doesn't seem to be implemented in Nightly yet, which makes writing and reading values from memory buffer extremely slow (when implemented in [this][20] way). Still, here's an example code for the usual invert filter.
 ```javascript
 function invert_frame_simd(source) {
     var fff = SIMD.int32x4.splat(0x00FFFFFF);
@@ -105,7 +105,7 @@ Unfortunately it runs a lot slower than pure JS right now (try it [here][21]), a
 
 ### WebGL
 
-A completely different way of doing things is [WebGL][23]. WebGL is basically a JavaScript interface for native OpenGL implementation, which allows you to run some fancy code on GPU. It's usually used for graphic programming in games and such, but you can also do some [image][24] and even [video][25] processing with it. Moreover, you don't have to call the usual getImageData routine, which means that it isn't limited to the usual 20ms lag. 
+A completely different way of doing things is [WebGL][23]. WebGL is basically a JavaScript interface for native OpenGL implementation, which allows you to run some fancy code on GPU. It's usually used for graphic programming in games and such, but you can also do some [image][24] and even [video][25] processing with it. Moreover, you don't have to call the usual getImageData routine, which means that it isn't limited by the 20ms lag.
 
 But the power comes at a price - **WebGL is *not* designed for video processing and using it this way is a giant pain in the ass**. You need to go through the whole process of defining vertices (which will always cover the whole frame), defining texture positions (which will always cover the whole frame) and then [applying the video as a texture][26]. Thankfully, WebGL is smart enough to get frames from the video automatically. Well, at least in Chrome and Firefox, IE11 is not so happy about it:
 
@@ -138,7 +138,7 @@ Real-time video processing inside your browser is possible. Kinda.
 
 The only way of doing it with reasonable performance is using WebGL, which offers very fast execution at the price of a very ugly codebase. All other ways have to deal with the awful canvas performance and are either too slow or too new and unpolished to be used in real world. 
 
-It's very unlikely that I'll be implementing this extension myseful because I simply don't hate myself enough. A single look at the [webgl demo][32] source code makes me want to never touch graphics programming again. But who knows what might happen tomorrow.
+It's very unlikely that I'll be implementing this extension myself because I simply don't hate myself enough. A single look at the [webgl demo][32] source code makes me want to never touch graphics programming again. But who knows what might happen tomorrow.
 
 #### Notes
 
