@@ -124,7 +124,7 @@ core1[6] = 0.0;
 core1[7] = -1.0;
 core1[8] = -1.0;
 ```
-In short, CUDA and OpenCL were implemented *not* because OpenGL (and DirectX for that matter) is great for generic-purpose programming.
+In short, OpenGL (and DirectX for that matter) is not a tool you want to use for general-purpose programming.
 
 On the bright side, WebGL delivers truly amazing performance for web ([which you have no easy way to measure][29]) - it can process [masktools prewitt core][30] (four different 3x3 cores) in real time on a 1080p video (and higher resolutions) without any problems. If you hate yourself and are not afraid of the not-so-maintainable codebase, you could definitely do some very fancy things with it. If you hate yourself a little less and you're fine with depending on a large library, do take a look at [seriously.js][31]. If you're like me and want to keep your code clean, then you probably want to use WebCL.
 
