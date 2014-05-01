@@ -126,11 +126,11 @@ core1[8] = -1.0;
 ```
 In short, CUDA and OpenCL were implemented *not* because OpenGL (and DirectX for that matter) is great for generic-purpose programming.
 
-On the bright side, WebGL delivers truly amazing performance for web (which you have no easy way to measure) - it can process [masktools prewitt core][29] (four different 3x3 cores) in real time on a 1080p video (and higher resolutions) without any problems. If you hate yourself and are not afraid of the not-so-maintainable codebase, you could definitely do some very fancy things with it. If you hate yourself a little less and you're fine with depending on a large library, do take a look at [seriously.js][25]. If you're like me and want to keep your code clean, then you probably want to use WebCL.
+On the bright side, WebGL delivers truly amazing performance for web ([which you have no easy way to measure][29]) - it can process [masktools prewitt core][30] (four different 3x3 cores) in real time on a 1080p video (and higher resolutions) without any problems. If you hate yourself and are not afraid of the not-so-maintainable codebase, you could definitely do some very fancy things with it. If you hate yourself a little less and you're fine with depending on a large library, do take a look at [seriously.js][31]. If you're like me and want to keep your code clean, then you probably want to use WebCL.
 
 ### WebCL
 
-But you can't. According to [wikipedia][30], WebCL 1.0 was finalized on March 19, 2014. This makes it the youngest technology yet, even newer than SIMD.js. And unlike SIMD.js, it [won't be implemented in Firefox][31] any time soon. I can't find the link but remember reading that it won't make it to Chrome either, for security reasons and whatnot. We're totally out of luck here. 
+But you can't. According to [wikipedia][32], WebCL 1.0 was finalized on March 19, 2014. This makes it the youngest technology yet, even newer than SIMD.js. And unlike SIMD.js, it [won't be implemented in Firefox][33] any time soon. I can't find the link but remember reading that it won't make it to Chrome either, for security reasons and whatnot. We're totally out of luck here. 
 
 ### Conclusion
 
@@ -138,11 +138,11 @@ Real-time video processing inside your browser is possible. Kinda.
 
 The only way of doing it with reasonable performance is using WebGL, which offers very fast execution at the price of a very ugly codebase. All other ways have to deal with the awful canvas performance and are either too slow or too new and unpolished to be used in real world. 
 
-It's very unlikely that I'll be implementing this extension myself because I simply don't hate myself enough. A single look at the [webgl demo][32] source code makes me want to never touch graphics programming again. But who knows what might happen tomorrow.
+It's very unlikely that I'll be implementing this extension myself because I simply don't hate myself enough. A single look at the [webgl demo][34] source code makes me want to never touch graphics programming again. But who knows what might happen tomorrow.
 
 #### Notes
 
-1. All demonstrations are based on a looped video which lags horribly on looping in most browsers. This happens because [browsers suck][33].
+1. All demonstrations are based on a looped video which lags horribly on looping in most browsers. This happens because [browsers suck][35].
 2. If you don't like looping video, add `loop=false` query parameter to the demo url.
 3. Both demonstrations contain full source code right in the html files with no external dependencies, which is probably useful for learning.
 4. I have no idea what I'm doing in JavaScript or WebGL.
@@ -176,8 +176,10 @@ It's very unlikely that I'll be implementing this extension myself because I sim
   [26]: https://developer.mozilla.org/en-US/docs/Web/WebGL/Animating_textures_in_WebGL
   [27]: https://github.com/brianchirls/Seriously.js/blob/0d029c40401f98aea9cd6170bef7866f6c1750ac/effects/seriously.dither.js#L51
   [28]: https://stackoverflow.com/questions/15262729/const-float-array-in-webgl-shader
-  [29]: webgl.html
-  [30]: https://en.wikipedia.org/wiki/WebCL
-  [31]: https://bugzilla.mozilla.org/show_bug.cgi?id=664147#c30
-  [32]: webgl.html
-  [33]: https://stackoverflow.com/questions/17930964/video-element-with-looping-does-not-loop-videos-seamlessly-in-chrome-or-firefo
+  [29]: https://stackoverflow.com/questions/20798294/is-it-possible-to-measure-rendering-time-in-webgl-using-gl-finish
+  [30]: webgl.html
+  [31]: http://seriouslyjs.org/
+  [32]: https://en.wikipedia.org/wiki/WebCL
+  [33]: https://bugzilla.mozilla.org/show_bug.cgi?id=664147#c30
+  [34]: webgl.html
+  [35]: https://stackoverflow.com/questions/17930964/video-element-with-looping-does-not-loop-videos-seamlessly-in-chrome-or-firefo
