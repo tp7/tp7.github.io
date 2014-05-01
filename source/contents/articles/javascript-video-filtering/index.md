@@ -11,11 +11,11 @@ While we have this area covered quite well on desktop with tools like [ffdshow r
 
 ### The problem
 
-I've asked around and apparently I'm not the only one who thought about it, which means this time I might actually get more than one user. So I started studying the field and it appears that the most reasonable way of implementing this is a browser extension, written entirely in JavaScript. Most of the codebase could be shared between different extension versions for different browser, plus you could easily get into extension stores.
+I've asked around and apparently I'm not the only one who thought about it, which means this time I might actually get more than one user. So I started researching the field and it appears that the most reasonable way of implementing this is a browser extension, written entirely in JavaScript. Most of the codebase could be shared between different extension versions for different browser, plus you could easily get into extension stores.
 
 The basic workflow of this extension is simple: find a *video* tag on the page, get frames from it and display them on a canvas placed on top of the video. There are questions about CORS and some sites still using Flash but those are not relevant for most cases. 
 
-The real issue with this approach is the implementation language - JavaScript. The single reasonable alternative is [Google Chrome Native Client][5] which (surprisingly) works only in Chrome and Mozilla doesn't appear to have any plans of supporting it in the future. But this shouldn't be a problem, right? JavaScript is getting faster these days and a lot of programmers on the internet argue that it's the only language you ever need to write almost any kind of software. There are some great tools like sm.js, SIMD.js, WebGL and WebCL which could make your extension run only a little bit slower than native code.
+The real issue with this approach is the implementation language - JavaScript. The single reasonable alternative is [Google Chrome Native Client][5] which (surprisingly) works only in Chrome and Mozilla doesn't appear to have any plans of supporting it in the future. But this shouldn't be a problem, right? JavaScript is getting faster these days and a lot of programmers on the internet argue that it's the only language you ever need to write almost any kind of software. There are some great tools like asm.js, SIMD.js, WebGL and WebCL which could make your extension run only a little bit slower than native code.
 
 Well, not exactly. 
 
@@ -107,7 +107,7 @@ Unfortunately it runs a lot slower than pure JS right now (try it [here][21]), a
 
 A completely different way of doing things is [WebGL][23]. WebGL is basically a JavaScript interface for native OpenGL implementation, which allows you to run some fancy code on GPU. It's usually used for graphic programming in games and such, but you can also do some [image][24] and even [video][25] processing with it. Moreover, you don't have to call the usual getImageData routine, which means that it isn't limited to the usual 20ms lag. 
 
-But the power comes at a price - **WebGL is *not* designed for video processing and using it this way is a giant pain in the ass**. You need to go through the whole process of defining vertices (which will be always cover the whole frame), defining texture positions (which will always cover the whole frame) and then [applying the video as a texture][26]. Thankfully, WebGL is smart enough to get frames from the video automatically. Well, at least in Chrome and Firefox, IE11 is not so happy about it:
+But the power comes at a price - **WebGL is *not* designed for video processing and using it this way is a giant pain in the ass**. You need to go through the whole process of defining vertices (which will always cover the whole frame), defining texture positions (which will always cover the whole frame) and then [applying the video as a texture][26]. Thankfully, WebGL is smart enough to get frames from the video automatically. Well, at least in Chrome and Firefox, IE11 is not so happy about it:
 
 > WEBGL11072: INVALID_VALUE: texImage2D: This texture source is not supported
 
@@ -126,7 +126,7 @@ core1[8] = -1.0;
 ```
 In short, CUDA and OpenCL were implemented *not* because OpenGL (and DirectX for that matter) is great for generic-purpose programming.
 
-On the bright side, WebGL delivers truly amazing performance for web (which you have no easy way to measure) - it can process [masktools prewitt core][29] (four different 3x3 cores) in real time on a 1080p video (and higher resolutions) without any problems. If you hate yourself and are not afraid of the not-so-maintainable codebase, you could definitely do some very fancy things with it. If you hate yourself a little less and you're fine with depending on a huge libraries, do take a look at [seriously.js][25]. If you're like me and want to keep your code clean, then you probably want to use WebCL.
+On the bright side, WebGL delivers truly amazing performance for web (which you have no easy way to measure) - it can process [masktools prewitt core][29] (four different 3x3 cores) in real time on a 1080p video (and higher resolutions) without any problems. If you hate yourself and are not afraid of the not-so-maintainable codebase, you could definitely do some very fancy things with it. If you hate yourself a little less and you're fine with depending on a large library, do take a look at [seriously.js][25]. If you're like me and want to keep your code clean, then you probably want to use WebCL.
 
 ### WebCL
 

@@ -38,11 +38,11 @@
 
 <h3>The problem</h3>
 
-<p>I&#8217;ve asked around and apparently I&#8217;m not the only one who thought about it, which means this time I might actually get more than one user. So I started studying the field and it appears that the most reasonable way of implementing this is a browser extension, written entirely in JavaScript. Most of the codebase could be shared between different extension versions for different browser, plus you could easily get into extension stores.</p>
+<p>I&#8217;ve asked around and apparently I&#8217;m not the only one who thought about it, which means this time I might actually get more than one user. So I started researching the field and it appears that the most reasonable way of implementing this is a browser extension, written entirely in JavaScript. Most of the codebase could be shared between different extension versions for different browser, plus you could easily get into extension stores.</p>
 
 <p>The basic workflow of this extension is simple: find a <em>video</em> tag on the page, get frames from it and display them on a canvas placed on top of the video. There are questions about CORS and some sites still using Flash but those are not relevant for most cases. </p>
 
-<p>The real issue with this approach is the implementation language - JavaScript. The single reasonable alternative is <a href="https://developer.chrome.com/native-client">Google Chrome Native Client</a> which (surprisingly) works only in Chrome and Mozilla doesn&#8217;t appear to have any plans of supporting it in the future. But this shouldn&#8217;t be a problem, right? JavaScript is getting faster these days and a lot of programmers on the internet argue that it&#8217;s the only language you ever need to write almost any kind of software. There are some great tools like sm.js, SIMD.js, WebGL and WebCL which could make your extension run only a little bit slower than native code.</p>
+<p>The real issue with this approach is the implementation language - JavaScript. The single reasonable alternative is <a href="https://developer.chrome.com/native-client">Google Chrome Native Client</a> which (surprisingly) works only in Chrome and Mozilla doesn&#8217;t appear to have any plans of supporting it in the future. But this shouldn&#8217;t be a problem, right? JavaScript is getting faster these days and a lot of programmers on the internet argue that it&#8217;s the only language you ever need to write almost any kind of software. There are some great tools like asm.js, SIMD.js, WebGL and WebCL which could make your extension run only a little bit slower than native code.</p>
 
 <p>Well, not exactly. </p>
 
@@ -136,7 +136,7 @@ outputContext.putImageData(imageData, <span class="hljs-number">0</span>, <span 
 
 <p>A completely different way of doing things is <a href="https://en.wikipedia.org/wiki/WebGL">WebGL</a>. WebGL is basically a JavaScript interface for native OpenGL implementation, which allows you to run some fancy code on GPU. It&#8217;s usually used for graphic programming in games and such, but you can also do some <a href="http://www.html5rocks.com/en/tutorials/webgl/webgl_fundamentals/">image</a> and even <a href="http://seriouslyjs.org/">video</a> processing with it. Moreover, you don&#8217;t have to call the usual getImageData routine, which means that it isn&#8217;t limited to the usual 20ms lag. </p>
 
-<p>But the power comes at a price - <strong>WebGL is <em>not</em> designed for video processing and using it this way is a giant pain in the ass</strong>. You need to go through the whole process of defining vertices (which will be always cover the whole frame), defining texture positions (which will always cover the whole frame) and then <a href="https://developer.mozilla.org/en-US/docs/Web/WebGL/Animating_textures_in_WebGL">applying the video as a texture</a>. Thankfully, WebGL is smart enough to get frames from the video automatically. Well, at least in Chrome and Firefox, IE11 is not so happy about it:</p>
+<p>But the power comes at a price - <strong>WebGL is <em>not</em> designed for video processing and using it this way is a giant pain in the ass</strong>. You need to go through the whole process of defining vertices (which will always cover the whole frame), defining texture positions (which will always cover the whole frame) and then <a href="https://developer.mozilla.org/en-US/docs/Web/WebGL/Animating_textures_in_WebGL">applying the video as a texture</a>. Thankfully, WebGL is smart enough to get frames from the video automatically. Well, at least in Chrome and Firefox, IE11 is not so happy about it:</p>
 
 <blockquote>
   <p>WEBGL11072: INVALID_VALUE: texImage2D: This texture source is not supported</p>
@@ -157,7 +157,7 @@ core1[8] = -1.0;</code></pre>
 
 <p>In short, CUDA and OpenCL were implemented <em>not</em> because OpenGL (and DirectX for that matter) is great for generic-purpose programming.</p>
 
-<p>On the bright side, WebGL delivers truly amazing performance for web (which you have no easy way to measure) - it can process <a href="/articles/javascript-video-filtering/webgl.html">masktools prewitt core</a> (four different 3x3 cores) in real time on a 1080p video (and higher resolutions) without any problems. If you hate yourself and are not afraid of the not-so-maintainable codebase, you could definitely do some very fancy things with it. If you hate yourself a little less and you&#8217;re fine with depending on a huge libraries, do take a look at <a href="http://seriouslyjs.org/">seriously.js</a>. If you&#8217;re like me and want to keep your code clean, then you probably want to use WebCL.</p>
+<p>On the bright side, WebGL delivers truly amazing performance for web (which you have no easy way to measure) - it can process <a href="/articles/javascript-video-filtering/webgl.html">masktools prewitt core</a> (four different 3x3 cores) in real time on a 1080p video (and higher resolutions) without any problems. If you hate yourself and are not afraid of the not-so-maintainable codebase, you could definitely do some very fancy things with it. If you hate yourself a little less and you&#8217;re fine with depending on a large library, do take a look at <a href="http://seriouslyjs.org/">seriously.js</a>. If you&#8217;re like me and want to keep your code clean, then you probably want to use WebCL.</p>
 
 <h3>WebCL</h3>
 
