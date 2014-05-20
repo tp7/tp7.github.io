@@ -26,10 +26,12 @@ Are almost always terrible. Here's some open source projects I've worked on.
  11. [CLExpr][15] - OpenCl plugin for runtime calculation of expressions on 8 and 16-bit depths clips. Makes mt_lutxy and mt_lutxyz possible on 16-bit.
 
 #### Other ####
-1. [WOptiPNG][16] - simple modern [OptiPNG][17] GUI
+1. [Sushi][16] - automatic subtitle shifter based on audio streams
+2. [WOptiPNG][17] - simple modern [OptiPNG][18] GUI
  
 ### Contacts ###
-Feel free to follow me on [GitHub][18] or [twitter][19]. You can also drop an email to <a data-email="%6f%70%65%6e%40%74%70%37%2e%70%77" id="email-link" href="#">somewhere</a>. 
+Feel free to follow me on [GitHub][19] or [twitter][20]. You can also drop an email to <a data-email="%6f%70%65%6e%40%74%70%37%2e%70%77" id="email-link" href="#">somewhere</a>. 
+
 
   [1]: https://github.com/AviSynth/AviSynthPlus
   [2]: https://github.com/tp7/SangNom2
@@ -46,8 +48,8 @@ Feel free to follow me on [GitHub][18] or [twitter][19]. You can also drop an em
   [13]: https://github.com/tp7/MedianBlur2
   [14]: http://nomis80.org/ctmf.html
   [15]: https://github.com/tp7/CLExpr
-  [16]: https://github.com/tp7/WOptiPNG
-  [17]: http://optipng.sourceforge.net/
-  [18]: https://github.com/tp7
-  [19]: https://twitter.com/tp7ptr
- 
+  [16]: https://github.com/tp7/Sushi
+  [17]: https://github.com/tp7/WOptiPNG
+  [18]: http://optipng.sourceforge.net/
+  [19]: https://github.com/tp7
+  [20]: https://twitter.com/tp7ptr
