@@ -115,11 +115,11 @@
 
 <p>First of all, this is the first &#8220;spatial&#8221; function (lutf was also spatial but it doesn&#8217;t count). It means that neighborhood pixels <em>can</em> affect output value of the current one. Parameter <code>pixels</code> determines what pixels do.</p>
 
-<p>Second - this is one of the hardest masktools function. For every pixel defined by the <code>pixels</code> parameter, calculate the expression value using the same old lut. For example, imagine a block from your image (current pixel is in the center).</p>
-
-<p>Your pixels value defines a cross, shown on the next image.</p>
-
-<p>You expression is x y + and your mode is &#8220;max&#8221;. Then it will first calculate 5 values:</p>
+<p>Second - this is one of the hardest masktools function. For every pixel defined by the <code>pixels</code> parameter, calculate the expression value using the same old lut. For example, imagine a block from your image (current pixel is in the center). <br>
+<img src="/articles/masktools/lut1.png" alt="enter image description here" title="" /> <br>
+Your pixels value defines a cross, shown on the next image. <br>
+<img src="/articles/masktools/lut2.png" alt="enter image description here" title="" /> <br>
+You expression is x y + and your mode is &#8220;max&#8221;. Then it will first calculate 5 values:</p>
 
 <ol>
 <li>5 + 2 = 7</li>

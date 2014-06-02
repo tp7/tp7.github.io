@@ -78,9 +78,9 @@ I think the most common use-case for this function is optimization of runtime fi
 First of all, this is the first "spatial" function (lutf was also spatial but it doesn't count). It means that neighborhood pixels *can* affect output value of the current one. Parameter `pixels` determines what pixels do.
 
 Second - this is one of the hardest masktools function. For every pixel defined by the `pixels` parameter, calculate the expression value using the same old lut. For example, imagine a block from your image (current pixel is in the center).
-
+![enter image description here][16]
 Your pixels value defines a cross, shown on the next image.
-
+![enter image description here][17]
 You expression is x y + and your mode is "max". Then it will first calculate 5 values:
 
  1. 5 + 2 = 7
@@ -91,11 +91,11 @@ You expression is x y + and your mode is "max". Then it will first calculate 5 v
 
 Then it will apply mode function to calculated value, resulting in `max(7, 9, 10, 11, 13) = 13`. This value will be written to the output frame.
 
-Strictly speaking, x and y values come from different clips (hence two clip parameters), but most of the times you'll be specifying the same clip for both arguments. And actually, [there is a bug in masktools][16], that makes it always use values from clip2 (no longer true for my fork).
+Strictly speaking, x and y values come from different clips (hence two clip parameters), but most of the times you'll be specifying the same clip for both arguments. And actually, [there is a bug in masktools][18], that makes it always use values from clip2 (no longer true for my fork).
 
 This function is so slow you'll most likely never use it. Lut size is only 65KB per plane, but actual calculation is costly. Every time you see this used (in gradfun2dbmod, for example) - try to think of a way to implement the algorithm without it.
 
-#### [mt_lutsx][17]
+#### [mt_lutsx][19]
 
 This one is simple. Just like in mt_luts, you specify range of pixels and modes (two this time). Mt_lutsx calculates mode1 and mode2 for clip1 and clip2 respectively. Only then the final lut is applied.
 
@@ -111,9 +111,9 @@ is equivalent but much slower than
 
 Lut size is 16MB per plane and the function is insanely slow, thus not really usable even for SD content.
 
-#### [mt_lutspa][18]
+#### [mt_lutspa][20]
 
-The most unusual lut function. In fact, this isn't even a lut function - for whatever reason Manao just [implemented it with a lookup operation][19] while it actually requires just a single [memcpy][20].
+The most unusual lut function. In fact, this isn't even a lut function - for whatever reason Manao just [implemented it with a lookup operation][21] while it actually requires just a single [memcpy][22].
 
 Unlike other lut functions, this one doesn't care about input values at all - its lut contains values for all possible combination of x and y coordinates of a frame. Lut size is equal to frame size at a given resolution. I'm not gonna describe how this function works because it doesn't introduce anything new (check the source code if you're wondering what some parameters are doing).
 
@@ -141,8 +141,10 @@ One more thing - reference masktools does not include 16-bit lut and Firesledge 
   [13]: http://pastebin.com/5nqkznbk
   [14]: http://pastebin.com/22UDWZ0n
   [15]: https://github.com/tp7/masktools/blob/master/masktools/filters/lut/luts/luts.cpp
-  [16]: http://forum.doom9.org/showpost.php?p=1637985&postcount=544
-  [17]: https://github.com/tp7/masktools/blob/master/masktools/filters/lut/lutsx/lutsx.cpp
-  [18]: https://github.com/tp7/masktools/blob/master/masktools/filters/lut/lutspa/lutspa.h#L76
-  [19]: https://github.com/tp7/masktools/blob/6723f85c777e12a0877c5ee5fb0b513320f9c13b/masktools/filters/lut/lutspa/functions.cpp
-  [20]: https://github.com/tp7/masktools/blob/master/masktools/filters/lut/lutspa/lutspa.cpp
+  [16]: lut1.png
+  [17]: lut2.png
+  [18]: http://forum.doom9.org/showpost.php?p=1637985&postcount=544
+  [19]: https://github.com/tp7/masktools/blob/master/masktools/filters/lut/lutsx/lutsx.cpp
+  [20]: https://github.com/tp7/masktools/blob/master/masktools/filters/lut/lutspa/lutspa.h#L76
+  [21]: https://github.com/tp7/masktools/blob/6723f85c777e12a0877c5ee5fb0b513320f9c13b/masktools/filters/lut/lutspa/functions.cpp
+  [22]: https://github.com/tp7/masktools/blob/master/masktools/filters/lut/lutspa/lutspa.cpp
