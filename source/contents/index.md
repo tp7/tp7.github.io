@@ -16,7 +16,7 @@ Also, I don't lie.
 **[WOptiPNG][15]** - simple modern [OptiPNG][16] GUI
  
 ### Contacts
-I'm available on [GitHub][17] and [twitter][18]. You can also drop an email to <a data-email="%6f%70%65%6e%40%74%70%37%2e%70%77" id="email-link" href="#">somewhere</a>. 
+I'm available on [GitHub][17], [Habrahabr][18] and [twitter][19]. You can also drop an email to <a data-email="%6f%70%65%6e%40%74%70%37%2e%70%77" id="email-link" href="#">somewhere</a>. 
 
 
   [1]: https://github.com/AviSynth/AviSynthPlus
@@ -36,4 +36,5 @@ I'm available on [GitHub][17] and [twitter][18]. You can also drop an email to <
   [15]: https://github.com/tp7/WOptiPNG
   [16]: http://optipng.sourceforge.net/
   [17]: https://github.com/tp7
-  [18]: https://twitter.com/tp7ptr
+  [18]: http://habrahabr.ru/users/tp7/
+  [19]: https://twitter.com/tp7ptr
