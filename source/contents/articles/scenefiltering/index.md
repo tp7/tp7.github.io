@@ -16,9 +16,9 @@ Also, this article assumes RFS-based scenefilter, i.e. stuff that does not modif
 So, what do you do?
 
  1. First of all, install [AvsPmod][1] if you don’t have it yet. It most likely will run in wine, but if it doesn’t – you probably should install a Windows VM because using AvsP is important. Right after installing it, go to `Options -> Program settings -> User          Sliders` and disable `Create user sliders automatically`. Sliders are useless most of the time (I never use them) and they             considerably slow down initial loading of large scripts (scripts with many filter calls).
- 2. Make keyframes. Ask your timer if you don’t know how or read about it here.
+ 2. Make keyframes. Ask your timer if you don’t know how or read about it [here][2].
  3. Prepare your video. You should use the fastest source filter available, being it ffvideosource, lwlibavvideosource, avisource or rawsource. DgIndex, dss2 or other slow source filters will make previewing painful.
- 4. Learn how to use ReplaceFramesSimple (found [here][2]). This is the main working horse of all scenefiltering. That will help you keep your scripts readable.
+ 4. Learn how to use ReplaceFramesSimple (found [here][3]). This is the main working horse of all scenefiltering. That will help you keep your scripts readable.
 
 Now, if you stare at your source for a while, you’ll notice that most frames can be processed with the same **default filter chain**. For example it’s highly likely that most bright scenes don’t even need any kind of debanding or look fine after a simple one. Write a chain that satisfies you on as many frames as possible. It doesn’t have to work everywhere though, because you’ll be changing the filtering for some scenes later. At this point your script will look like
 
@@ -39,7 +39,7 @@ Then you have to write **filtering primitives and presets**. This is the hardest
     super_strong_debanding = denoise_16bit.deband3()
     #~ and so on
 
-You might be wondering why doing this? The answer is simple – avisynth has real problems running scripts with many filter calls. It kills caching, requires more memory and in general it is the most important reason why large scripts might not run at all. So use as little filter calls as possible. This might get [fixed in vapoursynth][3], but for now it has the same kind of problems.
+You might be wondering why doing this? The answer is simple – avisynth has real problems running scripts with many filter calls. It kills caching, requires more memory and in general it is the most important reason why large scripts might not run at all. So use as little filter calls as possible. This might get [fixed in vapoursynth][4], but for now it has the same kind of problems.
 
 This works because it’s highly unlikely that you’ll need some specific filtering for every scene you process. Most of them share something in common. Studios don’t change processing in the middle of the source just to troll encoders, you know (SHAFT not included). If you can remove all the noise with dfttest(sigma=1000) in most scenes, you can expect it to work everywhere.
 
@@ -71,7 +71,7 @@ The whole processing workflow is simple:
 
  1. Navigate to the start of the next scene
  2. Decide what filtering you want to do here, if any. Look at a few frames at the beginning and in the end of the scene. If video changes a lot inside the scene – check some frames in the middle. More often than not, you’ll be able to come up with a single filter chain for the whole scene.
- 3. Write down the range `[start_frame_of_the_scene last_frame_of_the_scene]` in appropriate RFS call. You don’t have to do it by hand – [there’s a macro for that][4], that will insert the scene (one bookmark to the left and one to the right of your current frame) at the caret position. Sometimes scxvid gets it wrong and you need to change the frame in inserted range. Don’t worry – [there’s a macro for that][5]. Just select the frame you want to replace, press a button and it will get replaced with current frame.
+ 3. Write down the range `[start_frame_of_the_scene last_frame_of_the_scene]` in appropriate RFS call. You don’t have to do it by hand – [there’s a macro for that][5], that will insert the scene (one bookmark to the left and one to the right of your current frame) at the caret position. Sometimes scxvid gets it wrong and you need to change the frame in inserted range. Don’t worry – [there’s a macro for that][6]. Just select the frame you want to replace, press a button and it will get replaced with current frame.
  4. Move to next scene
 
 The whole scenefiltering is basically a combination of F2, Shift+F2, F4, Shift+F4 and F5 hotkeys (obviously depend on your setup).
@@ -94,7 +94,7 @@ The only “problem” left is masking. Always put it in the end of your script 
 
 This is probably all I wanted to say on scenefiltering today. And some related advices in the end:
 
- - Prefer to group OP/ED filtering into its own block but don’t separate it into functions. Grouping is important because it allows you to easily reuse scenefiltering between different episodes. You just have to shift ranges and guess what, [there’s a macro for that][6]. Just select appropriate ranges and apply it.
+ - Prefer to group OP/ED filtering into its own block but don’t separate it into functions. Grouping is important because it allows you to easily reuse scenefiltering between different episodes. You just have to shift ranges and guess what, [there’s a macro for that][7]. Just select appropriate ranges and apply it.
  - It might be more efficient to scenefiltering the thing twice, looking for different kinds of bugs, rather than doing everything at once.
  - Actually you need two “source” tabs – one to always be able to look at the source itself and one to play with masking.
  - Always use the source clips to build masks, not the filtered one (notice the o variable used at the source in the last example). Who knows what kind of silly stuff you can have in your last variable.
@@ -105,8 +105,9 @@ This is probably all I wanted to say on scenefiltering today. And some related a
 
 
   [1]: http://forum.doom9.org/showthread.php?t=153248
-  [2]: http://avisynth.org/stickboy/
-  [3]: https://github.com/vapoursynth/vapoursynth/issues/36
-  [4]: http://pastebin.com/F0Ntp7rq
-  [5]: http://pastebin.com/6hwjET0w
-  [6]: http://pastebin.com/h4GHXYfa
+  [2]: http://unanimated.xtreemhost.com/scxvid.htm
+  [3]: http://avisynth.org/stickboy/
+  [4]: https://github.com/vapoursynth/vapoursynth/issues/36
+  [5]: http://pastebin.com/F0Ntp7rq
+  [6]: http://pastebin.com/6hwjET0w
+  [7]: http://pastebin.com/h4GHXYfa
