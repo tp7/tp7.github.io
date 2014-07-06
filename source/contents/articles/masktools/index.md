@@ -147,4 +147,4 @@ One more thing - reference masktools does not include 16-bit lut and Firesledge 
   [19]: https://github.com/tp7/masktools/blob/master/masktools/filters/lut/lutsx/lutsx.cpp
   [20]: https://github.com/tp7/masktools/blob/master/masktools/filters/lut/lutspa/lutspa.h#L76
   [21]: https://github.com/tp7/masktools/blob/6723f85c777e12a0877c5ee5fb0b513320f9c13b/masktools/filters/lut/lutspa/functions.cpp
-  [22]: https://github.com/tp7/masktools/blob/master/masktools/filters/lut/lutspa/lutspa.cpp
+  [22]: https://github.com/tp7/masktools/blob/c75efba37480fc87e81974cbb81ec43554f6e98b/masktools/filters/lut/lutspa/lutspa.h#L21
