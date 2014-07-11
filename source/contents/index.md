@@ -5,9 +5,7 @@ template: index.html
 
 I'm Victor Efimov, more commonly known as tp7, and I'm a code typist in Russian Far East.
 
-I often write C++, C#, Python and JavaScript but doing mostly ASP.NET MVC at work. I have a few years of experience developing very bad web applications and useless multimedia-related open source projects.
-
-Also, I don't lie.
+I often write C++, C#, Python and JavaScript but doing mostly ASP.NET MVC at work. I have a few years of experience developing web applications and multimedia-related open source projects.
 
 ### Projects
 
