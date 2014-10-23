@@ -3,9 +3,9 @@ template: index.html
 ----
 ## Hello
 
-I'm Victor Efimov, more commonly known as tp7, and I'm an any-kind-of-software engineer in Russian Far East.
+I'm Victor Efimov, more commonly known as tp7, and I'm an any-kind-of-software engineer in Russia.
 
-I usually write C++, C# and Python for multimedia-related projects. My work experience includes a few years of production ASP.NET development.
+I usually write C++, C# and Python for multimedia-related projects and web.
 
 ### Projects
 
