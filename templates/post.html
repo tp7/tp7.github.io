@@ -1,0 +1,16 @@
+{% extends "layout.html" %}
+{% block title %}{{this.title}} - {% endblock %}
+
+{% block content %}
+    <h1>{{this.title}}</h1>
+    <div class="post-date">{{ this.date | dateformat("medium") }}</div>
+
+    {{this.body.html}}
+{% endblock %}
+
+{% block footer %}
+<div class="nav">
+    <a href="{{site.get_root()|url}}" target="_self">Back to main page</a>
+</div>
+{{ super() }}
+{% endblock %}

@@ -1,0 +1,111 @@
+body {
+    font-size: 16px;
+    background-color: #fcfcfc;
+    color: #333;
+    line-height: 1.7;
+    font-family: "Lato", sans-serif;
+}
+
+footer {
+    text-align: center;
+    color: #8e8e8e;
+}
+
+.container {
+    margin-bottom: 100px;
+    width: 1170px;
+    margin-right: auto;
+    margin-left: auto;
+    padding-left: 15px;
+    padding-right: 15px;
+    text-align: justify;
+}
+
+a {
+    color: #428bca;
+    text-decoration: none;
+}
+
+a:hover, a:focus {
+    color: #2a6496;
+    text-decoration: underline;
+}
+
+code, .highlight {
+    font-size: inherit;
+    background-color: rgba(0, 0, 0, 0.04);
+    padding: 2px 4px;
+    border-radius: 5px;
+}
+
+code, pre, .highlight {
+    font-family: "Source Code Pro", monospace;
+    font-size: 0.9em;
+}
+
+pre {
+    padding: 0 20px;
+}
+
+.highlight pre {
+    margin: 0;
+    padding: 8px;
+}
+
+pre code {
+    background-color: transparent;
+    padding: 0;
+}
+
+.post-date {
+    margin-top: -20px;
+    color: rgb(203, 203, 203);
+}
+
+.nav {
+    margin-bottom: 0px;
+}
+
+h1 {
+    font-size: 2.6em;
+}
+
+h2 {
+    font-size: 2em;
+}
+
+h3 {
+    margin-top: 30px;
+    margin-bottom: 5px;
+    font-size: 1.5em;
+}
+
+h4 {
+    font-size: 1.25em;
+    margin-top: 30px;
+    margin-bottom: 10px;
+}
+
+.main-page h1, .main-page h2, .main-page h3, .main-page h4 {
+  font-weight: 400;
+}
+
+p {
+    margin: 0 0 0.6em;
+}
+
+blockquote {
+    border-left: 5px solid #eee;
+    border-left-width: 10px;
+    background-color: #f8f8f8;
+    padding: 15px 20px;
+    margin: 0 0 1em;
+}
+
+blockquote p {
+    line-height: 1.45;
+}
+
+blockquote p:last-child {
+    margin-bottom: 0;
+}

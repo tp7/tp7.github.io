@@ -1,8 +1,9 @@
----
 title: Real-time video filtering in JavaScript
-date: 2014-05-01
-template: article.html
 ---
+date: 2014-05-01
+---
+body: 
+
 <base target="_blank">
 
 Video processing is moving to runtime - with powerful PCs we have today, it's entirely possible and in fact easy to apply some (fairly complex) filtering on playback, thus avoiding the need for the time-consuming encoding stage [with ancient and overcomplicated tools][1] *plus* getting the ability to modify the video in the exact way the end user wants to see it. 
@@ -112,7 +113,7 @@ But the power comes at a price - **WebGL is *not* designed for video processing 
 > WEBGL11072: INVALID_VALUE: texImage2D: This texture source is not supported
 
 Moreover, you have to deal with [somewhat braindamaged GLSL language][27], which [doesn't even support defining constant arrays][28], so you either have to pass them as uniforms (fancy kinda-global variables), or do it the old way:
-```
+```C
 float core1[9];
 core1[0] = 1.0;
 core1[1] = 1.0;

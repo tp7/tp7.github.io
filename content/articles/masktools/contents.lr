@@ -1,8 +1,8 @@
----
-template: article.html
 title: Masktools 2
+---
 date: 2013-09-13
 ---
+body:
 
 #### What's a lut?
 
@@ -67,7 +67,7 @@ Now, the fun stuff. On a high level, you can think of it as mt_lutxy call, when 
 
 is equivalent to
 
-    mt_lutf(c1, c2, "max", "x y -")
+     mt_lutf(c1, c2, "max", "x y -")
 
 Obviously, mt_lutf version is way more efficient.
 
@@ -77,10 +77,10 @@ I think the most common use-case for this function is optimization of runtime fi
 
 First of all, this is the first "spatial" function (lutf was also spatial but it doesn't count). It means that neighborhood pixels *can* affect output value of the current one. Parameter `pixels` determines what pixels do.
 
-Second - this is one of the hardest masktools function. For every pixel defined by the `pixels` parameter, calculate the expression value using the same old lut. For example, imagine a block from your image (current pixel is in the center).
-![enter image description here][16]
-Your pixels value defines a cross, shown on the next image.
-![enter image description here][17]
+Second - this is one of the hardest masktools function. For every pixel defined by the `pixels` parameter, calculate the expression value using the same old lut. For example, imagine a block from your image (current pixel is in the center).  
+![enter image description here][16]  
+Your pixels value defines a cross, shown on the next image.  
+![enter image description here][17]  
 You expression is x y + and your mode is "max". Then it will first calculate 5 values:
 
  1. 5 + 2 = 7
