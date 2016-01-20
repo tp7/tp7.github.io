@@ -1,37 +1,29 @@
-<!DOCTYPE html>
+<!doctype html>
 <html>
 <head>
     <meta charset="utf-8">
     <title>Masktools 2 - tp7's hideout</title>
-    <link rel="stylesheet" href="/main.css">
+    <link rel="stylesheet" href="/static/pygments.css">
+    <link rel="stylesheet" href="/static/main.css">
     <link href='http://fonts.googleapis.com/css?family=Lato:300,400,700,400italic,700italic' rel='stylesheet' type='text/css'>
-    <link href='http://fonts.googleapis.com/css?family=Source+Code+Pro:400,700' rel='stylesheet' type='text/css'>
+    <link href='http://fonts.googleapis.com/css?family=Source+Code+Pro:400,700' rel='stylesheet' type='text/css
+    '>
 </head>
 <body>
-    <div class="container" id="content">
+  <div class="container" id="content">
     
+    <h1>Masktools 2</h1>
+    <div class="post-date">Sep 13, 2013</div>
 
-	<h1>Masktools 2</h1>
-	<div class="post-date">13.09.2013</div>
-	
-    <h4>What&#8217;s a lut?</h4>
-
-<p><strong>Lut</strong> is short for <strong>lookup table</strong>, a simple data structure where each predefined key maps to some specific value. It is basically a dictionary implemented as an array, where keys are indexes of elements in said array. For example, imagine a table <code>9 8 7 6 5 4 3 2 1 0</code>. The first element of this table is 9, so it will map value 0 (array indexing starts with 0) to 9, 1 to 8 and so on. There&#8217;s nothing insanely hard about the concept. It is used for optimization purposes, because when you have only a limited range of possible input values, it might be faster to calculate output value for each of them once and then look it up in a table, than doing the same calculations over and over again (it&#8217;s not always faster though).</p>
-
-<p>There&#8217;s one important thing about this optimization - it&#8217;s impossible to optimize with <a href="http://en.wikipedia.org/wiki/SIMD">SIMD</a> unless AVX2 instruction set is available (right now - only in Haswells). For simple operations like binarization, it is faster to binarize each pixel individually without a LUT, because with SIMD you can process multiple pixels at once (8-32 depending on the instruction set used). For a real example refer to my <a href="https://github.com/tp7/tcolormask">tcolormask</a> plugin, that switches to LUT only if SIMD operation is likely to be slower.</p>
-
+    <h4>What's a lut?</h4>
+<p><strong>Lut</strong> is short for <strong>lookup table</strong>, a simple data structure where each predefined key maps to some specific value. It is basically a dictionary implemented as an array, where keys are indexes of elements in said array. For example, imagine a table <code>9 8 7 6 5 4 3 2 1 0</code>. The first element of this table is 9, so it will map value 0 (array indexing starts with 0) to 9, 1 to 8 and so on. There's nothing insanely hard about the concept. It is used for optimization purposes, because when you have only a limited range of possible input values, it might be faster to calculate output value for each of them once and then look it up in a table, than doing the same calculations over and over again (it's not always faster though).</p>
+<p>There's one important thing about this optimization - it's impossible to optimize with <a href="http://en.wikipedia.org/wiki/SIMD">SIMD</a> unless AVX2 instruction set is available (right now - only in Haswells). For simple operations like binarization, it is faster to binarize each pixel individually without a LUT, because with SIMD you can process multiple pixels at once (8-32 depending on the instruction set used). For a real example refer to my <a href="https://github.com/tp7/tcolormask">tcolormask</a> plugin, that switches to LUT only if SIMD operation is likely to be slower.</p>
 <h4><a href="https://github.com/tp7/masktools/blob/master/masktools/filters/lut/lut/lut.cpp">mt_lut</a> (part 1)</h4>
-
-<p>Now imagine a video frame. In 8-bit world, video frame is a simple array of values in a range [0, 255]. It is possible, and in fact trivial, to build a lut that would map any possible value of any pixel in the frame to some output value. And this is exactly what mt_lut is doing (this operation is called a &#8220;point operation&#8221; in all image processing books, but the definition is somewhat more formal and abstract). If you look at the source code, you&#8217;ll see a loop over all rows in a frame, with an inner loop running over each pixel in the row, processing <em>each pixel individually</em>. This is important - no other pixel in the same image can affect the current one, they are completely independent.</p>
-
+<p>Now imagine a video frame. In 8-bit world, video frame is a simple array of values in a range [0, 255]. It is possible, and in fact trivial, to build a lut that would map any possible value of any pixel in the frame to some output value. And this is exactly what mt_lut is doing (this operation is called a "point operation" in all image processing books, but the definition is somewhat more formal and abstract). If you look at the source code, you'll see a loop over all rows in a frame, with an inner loop running over each pixel in the row, processing <em>each pixel individually</em>. This is important - no other pixel in the same image can affect the current one, they are completely independent.</p>
 <h4>But how does masktools build this lut?</h4>
-
-<p>So far I&#8217;ve been talking about a lut as a given, but how does one actually build this table? There are various ways to specify this data, but basically you always have a loop somewhere that runs over all possible values of pixels and computes some expression for each of them (unless you specify the whole lut by hand, of course). Masktools uses so-called <a href="http://en.wikipedia.org/wiki/Reverse_Polish_notation">reverse polish notation</a> (RPN for short) to specify this expression. Then for <a href="https://github.com/tp7/masktools/blob/master/masktools/filters/lut/lut/lut.h#L56">each possible 256 values it computes this expression</a>, storing the result in appropriate position in the lut. RPN might look complex and dumb at the first glance, but believe me - after some time you&#8217;ll get used to it and you <em>will</em> love it.</p>
-
-<p>The expression given to a lut filter is evaluated as a <a href="http://en.wikipedia.org/wiki/Stack_%28abstract_data_type%29">stack</a>. It basically puts all operators (separated by spaces) in the expression into a collection in <a href="http://en.wikipedia.org/wiki/LIFO_%28computing%29">LIFO</a> order, then takes the top element and evaluates it as expression, recursively extracting any other elements from the stack if needed. Do note that it doesn&#8217;t evaluate any operators it cannot reach from the top element. For example, expression <code>mt_lut("Hey look I can put some random stuff in luts x")</code> will be evaluated to x and all other garbage will be ignored. You can find the source code in <a href="https://github.com/tp7/masktools/blob/master/common/parser/symbol.cpp">symbol.cpp</a>.</p>
-
-<p>Let&#8217;s go through an example. Assume that the expression we gave was &#8220;x 25 - 2.5 *&#8221;. For each possible value of source pixel [0; 255] run the following algorithm (example assumes value of x = 10).</p>
-
+<p>So far I've been talking about a lut as a given, but how does one actually build this table? There are various ways to specify this data, but basically you always have a loop somewhere that runs over all possible values of pixels and computes some expression for each of them (unless you specify the whole lut by hand, of course). Masktools uses so-called <a href="http://en.wikipedia.org/wiki/Reverse_Polish_notation">reverse polish notation</a> (RPN for short) to specify this expression. Then for <a href="https://github.com/tp7/masktools/blob/master/masktools/filters/lut/lut/lut.h#L56">each possible 256 values it computes this expression</a>, storing the result in appropriate position in the lut. RPN might look complex and dumb at the first glance, but believe me - after some time you'll get used to it and you <em>will</em> love it.</p>
+<p>The expression given to a lut filter is evaluated as a <a href="http://en.wikipedia.org/wiki/Stack_%28abstract_data_type%29">stack</a>. It basically puts all operators (separated by spaces) in the expression into a collection in <a href="http://en.wikipedia.org/wiki/LIFO_%28computing%29">LIFO</a> order, then takes the top element and evaluates it as expression, recursively extracting any other elements from the stack if needed. Do note that it doesn't evaluate any operators it cannot reach from the top element. For example, expression <code>mt_lut("Hey look I can put some random stuff in luts x")</code> will be evaluated to x and all other garbage will be ignored. You can find the source code in <a href="https://github.com/tp7/masktools/blob/master/common/parser/symbol.cpp">symbol.cpp</a>.</p>
+<p>Let's go through an example. Assume that the expression we gave was "x 25 - 2.5 *". For each possible value of source pixel [0; 255] run the following algorithm (example assumes value of x = 10).</p>
 <ol>
 <li>First, expression is split into tokens [x, 25, -, 2.5, *]. </li>
 <li>Token * gets evaluated. It requires two arguments, so top two elements are extracted from the stack [-, 2.5]. </li>
@@ -42,65 +34,43 @@
 <li>-37,5 is not an allowed pixel value for a 8-bit clip, so it gets clipped to zero. </li>
 <li>Zero is stored in position 10 of the lut.</li>
 </ol>
-
 <p>Internally it works in double precision, unless integer-only operations are used (shifts, negation, modulo or binary operations), then it converts the value to 64-bit integer. Output result is clipped to range [0,255] because it’s impossible to store other values in 8-bit output clip.</p>
-
 <p>Alternative way to build the lut is to make script writers do it themselves in a Real Programming Language. This is exactly what <a href="http://www.vapoursynth.com/doc/functions/lut2.html">vapoursynth is asking you to do</a>. Whether you like this way more or not is up to you.</p>
-
 <h4>mt_lut (part 2)</h4>
-
-<p>Now that you know how luts are evaluated (of course you don&#8217;t, go get at least some experience with RPN first), let&#8217;s look at some examples.</p>
-
+<p>Now that you know how luts are evaluated (of course you don't, go get at least some experience with RPN first), let's look at some examples.</p>
 <ul>
 <li><code>mt_lut("255 x -")</code>  - inversion of the clip. Always use mt_invert over this lut.</li>
 <li><code>mt_lut("x 50 &gt; 255 0 ?")</code> - binarization. All values greater than 50 map to 255, all others - to zero. Always use mt_binarize over this lut.</li>
 <li><code>mt_lut("x 126 &lt; 126 x 130 &gt; 130 x ? ?")</code> - limits the value of a clip. Always use mt_clamp combined with blankclip for this (or limiter filter in avs core).</li>
-<li><code>mt_lut("x 128 / 0.7 ^ 128 *")</code> - increase value of all pixels lower than 128 and decrease value of other pixels. This decreases contrast of the image (look at a histogram to understand what it&#8217;s doing).</li>
+<li><code>mt_lut("x 128 / 0.7 ^ 128 *")</code> - increase value of all pixels lower than 128 and decrease value of other pixels. This decreases contrast of the image (look at a histogram to understand what it's doing).</li>
 </ul>
-
 <h4><a href="https://github.com/tp7/masktools/blob/master/masktools/filters/lut/lutxy/lutxy.cpp">mt_lutxy</a></h4>
-
-<p>This filter is basically identical to mt_lut, except it uses values from two clips rather than one. This is great for temporal stuff, but pixels are still completely independent spatially. The lut size is 256*256 = 65536 bytes, or 64KB per plane. No new theory here, so let&#8217;s go straight to examples.</p>
-
+<p>This filter is basically identical to mt_lut, except it uses values from two clips rather than one. This is great for temporal stuff, but pixels are still completely independent spatially. The lut size is 256*256 = 65536 bytes, or 64KB per plane. No new theory here, so let's go straight to examples.</p>
 <ul>
 <li><code>mt_lutxy(c1, c2, "x y max")</code> or <code>mt_lutxy(c1, c2, "x y &gt; x y ?")</code> - gets maximum value of two corresponding pixels. Always use mt_logic over this lut.</li>
 <li><code>mt_lutxy("x y - 128 +")</code> - difference between two clips plus 128. Always use mt_makediff over this.</li>
 <li><code>mt_lutxy("x y + 128 -")</code> - sum of two clips minus 128. Always use mt_adddiff over this.</li>
 <li><code>mt_lutxy("x y - abs 5 *")</code> - absolute difference between two pixels multiplied by 5. This is extremely useful for comparisons.</li>
 </ul>
-
-<p>There&#8217;s one thing I want to say about mt_lutxy - <strong>stop overusing it</strong>. Many avisynth script writers tend to forget that there are functions like mt_clamp or mt_****diff, making their scripts slower. Why? I don&#8217;t know.</p>
-
+<p>There's one thing I want to say about mt<em>lutxy - <strong>stop overusing it</strong>. Many avisynth script writers tend to forget that there are functions like mt_clamp or mt</em><em>**</em>diff, making their scripts slower. Why? I don't know.</p>
 <h4><a href="https://github.com/tp7/masktools/blob/master/masktools/filters/lut/lutxyz/lutxyz.cpp">mt_lutxyz</a></h4>
-
-<p>Same as previous two, except for three clips. The lut size is 256*256*256 = 16777216 bytes or 16MB <strong>per plane</strong>. This results in 48MB per each filter call. <strong>Always</strong>. I don&#8217;t know what Manao was thinking, but even if you don&#8217;t process some planes, even if some luts are completely identical - this filters will <strong>always</strong> compute and store three independent luts (this is fixed in my masktools fork, of course). This makes the filter basically unusable. Processing is still fast, but lut computation that happens on startup (after you press f5) takes <strong>time</strong>. No examples, avoid at all costs.</p>
-
+<p>Same as previous two, except for three clips. The lut size is 256<em>256</em>256 = 16777216 bytes or 16MB <strong>per plane</strong>. This results in 48MB per each filter call. <strong>Always</strong>. I don't know what Manao was thinking, but even if you don't process some planes, even if some luts are completely identical - this filters will <strong>always</strong> compute and store three independent luts (this is fixed in my masktools fork, of course). This makes the filter basically unusable. Processing is still fast, but lut computation that happens on startup (after you press f5) takes <strong>time</strong>. No examples, avoid at all costs.</p>
 <h4><a href="https://github.com/tp7/masktools/blob/master/masktools/filters/lut/lutf/lutf.cpp">mt_lutf</a></h4>
-
 <p>Now, the fun stuff. On a high level, you can think of it as mt_lutxy call, when one of the clips has constant value, equal to output of <code>mode</code> function, applied to all pixels in the clip, for example</p>
-
 <pre><code> scriptclip("""mt_lutxy(mt_lut(y=-c1.YPlaneMax()), c2, "x y -")""")
 </code></pre>
-
 <p>is equivalent to</p>
-
-<pre><code>mt_lutf(c1, c2, "max", "x y -")
+<pre><code> mt_lutf(c1, c2, "max", "x y -")
 </code></pre>
-
 <p>Obviously, mt_lutf version is way more efficient.</p>
-
-<p>I think the most common use-case for this function is optimization of runtime filtering. So if your script uses things like <code>YPlaneMax</code>, <code>AverageLuma</code> etc., consider rewriting it to <code>mt_lutf</code> and other masktools operations (downscaling <code>mt_lutf</code> output to 4x4 or 8x8 to keep things fast). It will make your script much faster and more stable. But do note that <code>mt_lutf</code> works on clips, so its output values are clipped to 8-bit integers, so e.g. <code>AverageLuma</code>-dependent processing will have lower precision when implemented with mt_lutf. Here&#8217;s a partial example of <a href="http://pastebin.com/5nqkznbk">runtime script</a> rewritten to <a href="http://pastebin.com/22UDWZ0n">masktools</a> (this was long ago so they might not be completely identical). You should decide for yourself if this kind of optimization is worth it.</p>
-
+<p>I think the most common use-case for this function is optimization of runtime filtering. So if your script uses things like <code>YPlaneMax</code>, <code>AverageLuma</code> etc., consider rewriting it to <code>mt_lutf</code> and other masktools operations (downscaling <code>mt_lutf</code> output to 4x4 or 8x8 to keep things fast). It will make your script much faster and more stable. But do note that <code>mt_lutf</code> works on clips, so its output values are clipped to 8-bit integers, so e.g. <code>AverageLuma</code>-dependent processing will have lower precision when implemented with mt_lutf. Here's a partial example of <a href="http://pastebin.com/5nqkznbk">runtime script</a> rewritten to <a href="http://pastebin.com/22UDWZ0n">masktools</a> (this was long ago so they might not be completely identical). You should decide for yourself if this kind of optimization is worth it.</p>
 <h4><a href="https://github.com/tp7/masktools/blob/master/masktools/filters/lut/luts/luts.cpp">mt_luts</a></h4>
-
-<p>First of all, this is the first &#8220;spatial&#8221; function (lutf was also spatial but it doesn&#8217;t count). It means that neighborhood pixels <em>can</em> affect output value of the current one. Parameter <code>pixels</code> determines what pixels do.</p>
-
-<p>Second - this is one of the hardest masktools function. For every pixel defined by the <code>pixels</code> parameter, calculate the expression value using the same old lut. For example, imagine a block from your image (current pixel is in the center). <br>
-<img src="/articles/masktools/lut1.png" alt="enter image description here" title="" /> <br>
-Your pixels value defines a cross, shown on the next image. <br>
-<img src="/articles/masktools/lut2.png" alt="enter image description here" title="" /> <br>
-You expression is x y + and your mode is &#8220;max&#8221;. Then it will first calculate 5 values:</p>
-
+<p>First of all, this is the first "spatial" function (lutf was also spatial but it doesn't count). It means that neighborhood pixels <em>can</em> affect output value of the current one. Parameter <code>pixels</code> determines what pixels do.</p>
+<p>Second - this is one of the hardest masktools function. For every pixel defined by the <code>pixels</code> parameter, calculate the expression value using the same old lut. For example, imagine a block from your image (current pixel is in the center).<br>
+<img src="lut1.png" alt="enter image description here"><br>
+Your pixels value defines a cross, shown on the next image.<br>
+<img src="lut2.png" alt="enter image description here"><br>
+You expression is x y + and your mode is "max". Then it will first calculate 5 values:</p>
 <ol>
 <li>5 + 2 = 7</li>
 <li>5 + 4 = 9</li>
@@ -108,58 +78,38 @@ You expression is x y + and your mode is &#8220;max&#8221;. Then it will first c
 <li>5 + 6 = 11</li>
 <li>5 + 8 = 13</li>
 </ol>
-
 <p>Then it will apply mode function to calculated value, resulting in <code>max(7, 9, 10, 11, 13) = 13</code>. This value will be written to the output frame.</p>
-
-<p>Strictly speaking, x and y values come from different clips (hence two clip parameters), but most of the times you&#8217;ll be specifying the same clip for both arguments. And actually, <a href="http://forum.doom9.org/showpost.php?p=1637985&amp;postcount=544">there is a bug in masktools</a>, that makes it always use values from clip2 (no longer true for my fork).</p>
-
-<p>This function is so slow you&#8217;ll most likely never use it. Lut size is only 65KB per plane, but actual calculation is costly. Every time you see this used (in gradfun2dbmod, for example) - try to think of a way to implement the algorithm without it.</p>
-
+<p>Strictly speaking, x and y values come from different clips (hence two clip parameters), but most of the times you'll be specifying the same clip for both arguments. And actually, <a href="http://forum.doom9.org/showpost.php?p=1637985&postcount=544">there is a bug in masktools</a>, that makes it always use values from clip2 (no longer true for my fork).</p>
+<p>This function is so slow you'll most likely never use it. Lut size is only 65KB per plane, but actual calculation is costly. Every time you see this used (in gradfun2dbmod, for example) - try to think of a way to implement the algorithm without it.</p>
 <h4><a href="https://github.com/tp7/masktools/blob/master/masktools/filters/lut/lutsx/lutsx.cpp">mt_lutsx</a></h4>
-
 <p>This one is simple. Just like in mt_luts, you specify range of pixels and modes (two this time). Mt_lutsx calculates mode1 and mode2 for clip1 and clip2 respectively. Only then the final lut is applied.</p>
-
-<p>It&#8217;s easy to understand by example:</p>
-
+<p>It's easy to understand by example:</p>
 <pre><code>mt_lutsx(c1, c2, c2, "med", "avg", mt_square(1), "x y + z + 3 /")
 </code></pre>
-
 <p>is equivalent but much slower than</p>
-
 <pre><code>mt_lutxyz(c1, c2.removegrain(4), c2.removegrain(20), "x y + z + 3 /")
 </code></pre>
-
 <p>You might think that it would be more precise because there are no intermediate clips, but since this is a lut function, values of z and y are converted to byte before the actual lookup happens.</p>
-
 <p>Lut size is 16MB per plane and the function is insanely slow, thus not really usable even for SD content.</p>
-
 <h4><a href="https://github.com/tp7/masktools/blob/master/masktools/filters/lut/lutspa/lutspa.h#L76">mt_lutspa</a></h4>
-
-<p>The most unusual lut function. In fact, this isn&#8217;t even a lut function - for whatever reason Manao just <a href="https://github.com/tp7/masktools/blob/6723f85c777e12a0877c5ee5fb0b513320f9c13b/masktools/filters/lut/lutspa/functions.cpp">implemented it with a lookup operation</a> while it actually requires just a single <a href="https://github.com/tp7/masktools/blob/c75efba37480fc87e81974cbb81ec43554f6e98b/masktools/filters/lut/lutspa/lutspa.h#L21">memcpy</a>.</p>
-
-<p>Unlike other lut functions, this one doesn&#8217;t care about input values at all - its lut contains values for all possible combination of x and y coordinates of a frame. Lut size is equal to frame size at a given resolution. I&#8217;m not gonna describe how this function works because it doesn&#8217;t introduce anything new (check the source code if you&#8217;re wondering what some parameters are doing).</p>
-
-<p>One interesting thing about this function - since it doesn&#8217;t depend on the actual input (other than resolution and colorspace), the result value can effectively be cached and reused without any additional processing. This is done by placing e.g. <code>trim(0,-1).loop(c.framecount())</code> after the lutpsa call. This is important if you&#8217;re using reference implementation which is lolslow.</p>
-
+<p>The most unusual lut function. In fact, this isn't even a lut function - for whatever reason Manao just <a href="https://github.com/tp7/masktools/blob/6723f85c777e12a0877c5ee5fb0b513320f9c13b/masktools/filters/lut/lutspa/functions.cpp">implemented it with a lookup operation</a> while it actually requires just a single <a href="https://github.com/tp7/masktools/blob/c75efba37480fc87e81974cbb81ec43554f6e98b/masktools/filters/lut/lutspa/lutspa.h#L21">memcpy</a>.</p>
+<p>Unlike other lut functions, this one doesn't care about input values at all - its lut contains values for all possible combination of x and y coordinates of a frame. Lut size is equal to frame size at a given resolution. I'm not gonna describe how this function works because it doesn't introduce anything new (check the source code if you're wondering what some parameters are doing).</p>
+<p>One interesting thing about this function - since it doesn't depend on the actual input (other than resolution and colorspace), the result value can effectively be cached and reused without any additional processing. This is done by placing e.g. <code>trim(0,-1).loop(c.framecount())</code> after the lutpsa call. This is important if you're using reference implementation which is lolslow.</p>
 <h4>16-bit</h4>
-
 <p>One interesting thing about luts is 16-bit support. Basically, the only function that can be trivially implemented in 16-bit is <code>mt_lut</code>, which will have 65KB lut size because of the extended range of possible input values. <code>Mt_lutxy</code> will require 65536*65536 bytes (4GB) lut, which is not a reasonable thing to do. There are some optimization techniques, but most implementations just switch to runtime value calculation and abandon any luts whatsoever.</p>
-
 <p>One more thing - reference masktools does not include 16-bit lut and Firesledge implemented it in terms of <code>mt_lutxy</code> in his dither package. I strongly advice you to check the source out to at least understand what kind of hackery avisynth devs need to implement to support 16-bit processing. The function is called Dither_lut16.</p>
 
-    </div>
 
-
-    <footer>
+  </div>
+  <footer>
         
 <div class="nav">
-	<a href="/" target="_self">Back to main page</a>
+    <a href="/" target="_self">Back to main page</a>
 </div>
 
         <div class="content-wrap">
-            <p>&copy; 2014 Victor Efimov &mdash; 
-            powered by <a href="https://github.com/jnordberg/wintersmith">Wintersmith</a> 
-            and <a href="https://stackedit.io/">stackedit.io</a></p>
+            <p>&copy; 2014-2016 Victor Efimov &mdash; 
+            powered by <a href="https://www.getlektor.com/">Lektor</a></p>
         </div>
         
 
@@ -179,7 +129,7 @@ var _gaq = _gaq || [];
 
     (function() {
         var a = document.getElementById('email-link');
-        var email = decodeURIComponent(a.getAttribute("data-email"));
+        var email = atob(a.getAttribute("data-email"));
         a.href = "mailto:" + email;
         a.innerText = email;
     })();
